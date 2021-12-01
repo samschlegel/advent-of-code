@@ -1,28 +1,8 @@
-use std::fs::File;
-use std::io::{self, BufRead};
-
-fn count_increases_part1(input: &[i64]) -> usize {
-    input.windows(2).map(|w| (w[1] > w[0]) as usize).sum()
-}
-
-fn count_increases_part2(input: &[i64]) -> usize {
-    input
-        .windows(3)
-        .map(|w| w.iter().sum())
-        // We could use something more fancy to support this over arbitrary iterators but our data is small enough
-        // that just collecting is probably faster
-        .collect::<Vec<i64>>()
-        .windows(2)
-        .map(|w| (w[1] > w[0]) as usize)
-        .sum()
-}
+use aoc_2021_day1::*;
+use std::io;
 
 fn main() -> io::Result<()> {
-    let file = File::open("../input")?;
-    let numbers: Vec<i64> = io::BufReader::new(file)
-        .lines()
-        .map(|line| line.unwrap().parse::<i64>().unwrap())
-        .collect();
+    let numbers = load_input("../input");
 
     println!("part 1: {}", count_increases_part1(&numbers));
     println!("part 2: {}", count_increases_part2(&numbers));
