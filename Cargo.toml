@@ -1,4 +1,4 @@
 [workspace]
 members = [
-  "2021",
+  "2021/rust",
 ]

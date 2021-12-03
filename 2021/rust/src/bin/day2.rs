@@ -38,9 +38,7 @@ fn part_2<I: Iterator<Item = S>, S: AsRef<str>>(lines: I) -> impl Iterator<Item 
     })
 }
 
-const TEST_INPUT: &str = include_str!("../../inputs/day2_test.txt");
-
-const INPUT: &str = include_str!("../../inputs/day2.txt");
+const INPUT: &str = include_str!("../../../inputs/day2.txt");
 
 fn main() -> io::Result<()> {
     let final_pos = part_1(INPUT.lines()).last().unwrap();
@@ -58,12 +56,7 @@ fn main() -> io::Result<()> {
 mod tests {
     use super::*;
 
-    const TEST_INPUT: &str = "forward 5
-down 5
-forward 8
-up 3
-down 8
-forward 2";
+    const TEST_INPUT: &str = include_str!("../../../inputs/day2_test.txt");
 
     #[test]
     fn test_part_1() {
