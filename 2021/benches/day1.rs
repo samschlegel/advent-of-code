@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
-use aoc_2021_day1::*;
+use aoc_2021::*;
 
 fn criterion_benchmark(c: &mut Criterion) {
     let numbers = load_input("../input");

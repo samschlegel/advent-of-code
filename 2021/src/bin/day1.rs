@@ -1,8 +1,8 @@
-use aoc_2021_day1::*;
+use aoc_2021::*;
 use std::io;
 
 fn main() -> io::Result<()> {
-    let numbers = load_input("../input");
+    let numbers = load_input("inputs/day1");
 
     println!("part 1: {}", count_increases_part1(&numbers));
     println!("part 2: {}", count_increases_part2(&numbers));
