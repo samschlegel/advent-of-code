@@ -7,7 +7,7 @@ struct Position {
     depth: i64,
 }
 
-fn part_a<I: Iterator<Item = S>, S: AsRef<str>>(lines: I) -> impl Iterator<Item = Position> {
+fn part_1<I: Iterator<Item = S>, S: AsRef<str>>(lines: I) -> impl Iterator<Item = Position> {
     lines.scan(Position::default(), |state, line| {
         let (command, x_str) = line.as_ref().split_once(' ').unwrap();
         let x: i64 = x_str.parse().unwrap();
@@ -21,7 +21,7 @@ fn part_a<I: Iterator<Item = S>, S: AsRef<str>>(lines: I) -> impl Iterator<Item 
     })
 }
 
-fn part_b<I: Iterator<Item = S>, S: AsRef<str>>(lines: I) -> impl Iterator<Item = Position> {
+fn part_2<I: Iterator<Item = S>, S: AsRef<str>>(lines: I) -> impl Iterator<Item = Position> {
     lines.scan(Position::default(), |state, line| {
         let (command, x_str) = line.as_ref().split_once(' ').unwrap();
         let x: i64 = x_str.parse().unwrap();
@@ -43,11 +43,11 @@ const TEST_INPUT: &str = include_str!("../../inputs/day2_test.txt");
 const INPUT: &str = include_str!("../../inputs/day2.txt");
 
 fn main() -> io::Result<()> {
-    let final_pos = part_a(INPUT.lines()).last().unwrap();
+    let final_pos = part_1(INPUT.lines()).last().unwrap();
     println!("{:?}", final_pos);
     println!("Multiplied: {}", final_pos.horizontal * final_pos.depth);
 
-    let final_pos = part_b(INPUT.lines()).last().unwrap();
+    let final_pos = part_2(INPUT.lines()).last().unwrap();
     println!("{:?}", final_pos);
     println!("Multiplied: {}", final_pos.horizontal * final_pos.depth);
 
@@ -66,9 +66,14 @@ down 8
 forward 2";
 
     #[test]
-    fn test_part_a() {
-        part_a(TEST_INPUT.lines()).for_each(|x| {
-            println!("{:?}", x);
-        });
+    fn test_part_1() {
+        let final_pos = part_1(TEST_INPUT.lines()).last().unwrap();
+        assert_eq!(final_pos.horizontal * final_pos.depth, 150);
+    }
+
+    #[test]
+    fn test_part_2() {
+        let final_pos = part_2(TEST_INPUT.lines()).last().unwrap();
+        assert_eq!(final_pos.horizontal * final_pos.depth, 900);
     }
 }
