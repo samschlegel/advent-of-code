@@ -17,7 +17,7 @@ fn part_a<I: Iterator<Item = S>, S: AsRef<str>>(lines: I) -> impl Iterator<Item 
             "up" => state.depth -= x,
             _ => {}
         }
-        Some(state.clone())
+        Some(*state)
     })
 }
 
@@ -34,7 +34,7 @@ fn part_b<I: Iterator<Item = S>, S: AsRef<str>>(lines: I) -> impl Iterator<Item 
             "up" => state.aim -= x,
             _ => {}
         }
-        Some(state.clone())
+        Some(*state)
     })
 }
 
