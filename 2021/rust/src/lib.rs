@@ -1,3 +1,5 @@
+pub mod day4;
+
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
@@ -24,4 +26,10 @@ pub fn load_input<P: AsRef<Path>>(path: P) -> Vec<i64> {
         .lines()
         .map(|line| line.unwrap().parse::<i64>().unwrap())
         .collect()
+}
+
+pub trait Day {
+    fn part1<I: Iterator<Item = S>, S: AsRef<str>>(&mut self, lines: &mut I) -> io::Result<()>;
+
+    fn part2<I: Iterator<Item = S>, S: AsRef<str>>(&mut self, lines: &mut I) -> io::Result<()>;
 }
