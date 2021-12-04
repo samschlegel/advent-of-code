@@ -42,8 +42,6 @@ fn part_1(input: &str) {
         }
     }
 
-    println!("ones: {:?}", ones);
-    println!("zeroes: {:?}", zeroes);
     println!("Gamma: {}", gamma);
     println!("Epsilon: {}", epsilon);
     println!("G * E: {}", gamma * epsilon);
@@ -53,7 +51,7 @@ fn part_1(input: &str) {
     let mut i = 0;
     let mut oxygen = 0;
 
-    while !oxygen_candidates.is_empty() && i < LEN {
+    while oxygen_candidates.len() > 1 {
         let t = count_bits(oxygen_candidates.iter());
         numbers = t.0;
         zeroes = t.1;
@@ -63,37 +61,27 @@ fn part_1(input: &str) {
             let most_common = if ones[i] >= zeroes[i] { '1' } else { '0' };
             c.chars().nth(i).unwrap() == most_common
         });
-        println!("i: {} candidates: {:?}", i, oxygen_candidates);
-        if oxygen_candidates.len() == 1 {
-            oxygen = i32::from_str_radix(oxygen_candidates.iter().next().unwrap(), 2).unwrap();
-            break;
-        }
-
         i += 1;
     }
+
+    oxygen = i32::from_str_radix(oxygen_candidates.iter().next().unwrap(), 2).unwrap();
 
     println!("Oxygen: {}", oxygen);
 
     let mut i = 0;
     let mut co2 = 0;
 
-    while !co2_candidates.is_empty() && i < LEN {
-        let t = count_bits(co2_candidates.iter());
-        numbers = t.0;
-        zeroes = t.1;
-        ones = t.2;
+    while co2_candidates.len() > 1 {
+        let (_, zeroes, ones) = count_bits(co2_candidates.iter());
 
         co2_candidates.retain(|c| {
             let least_common = if ones[i] < zeroes[i] { '1' } else { '0' };
             c.chars().nth(i).unwrap() == least_common
         });
-        println!("i: {} candidates: {:?}", i, co2_candidates);
-        if co2_candidates.len() == 1 {
-            co2 = i32::from_str_radix(co2_candidates.iter().next().unwrap(), 2).unwrap();
-            break;
-        }
         i += 1;
     }
+
+    co2 = i32::from_str_radix(co2_candidates.iter().next().unwrap(), 2).unwrap();
 
     println!("co2: {}", co2);
 
