@@ -1,20 +1,23 @@
-use std::{
-    env,
-    io::{self, BufRead},
-};
+use std::{env, fs, io};
 
-use aoc_2021::{day4::Day4, Day};
-
-const INPUT: &str = include_str!("../../../inputs/day4.txt");
+use aoc_2021::{day6::Day6, Day};
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    let mut day = match args[1].as_str() {
-        "4" => Day4::default(),
+    let day_arg = &args[1];
+    let mut day = match day_arg.as_str() {
+        // "4" => Box::new(Day4::default()),
+        // "5_test" => Day5::new(10, 10),
+        // "5" => Day5::new(1000, 1000),
+        "6_test" => Day6::new(),
+        "6" => Day6::new(),
         _ => todo!(),
     };
 
-    day.part1(&mut INPUT.lines())?;
+    let filepath = format!("inputs/day{}.txt", day_arg);
+    let input = fs::read_to_string(filepath)?;
+
+    day.part1(&mut input.lines())?;
 
     Ok(())
 }

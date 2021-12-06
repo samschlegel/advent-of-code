@@ -1,4 +1,3 @@
-use core::num;
 use std::io;
 
 use crate::Day;

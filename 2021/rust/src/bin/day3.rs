@@ -1,4 +1,3 @@
-use core::num;
 use std::{collections::HashSet, io};
 
 const INPUT: &str = include_str!("../../../inputs/day3.txt");
@@ -26,7 +25,7 @@ fn count_bits<'a, S: AsRef<str> + ToString + 'a>(
 }
 
 fn part_1(input: &str) {
-    let (mut numbers, mut zeroes, mut ones) = count_bits(input.lines());
+    let (numbers, mut zeroes, mut ones) = count_bits(input.lines());
 
     let mut gamma = 0;
     let mut epsilon = 0;
@@ -49,11 +48,9 @@ fn part_1(input: &str) {
     let mut oxygen_candidates = numbers.clone();
     let mut co2_candidates = numbers.clone();
     let mut i = 0;
-    let mut oxygen = 0;
 
     while oxygen_candidates.len() > 1 {
         let t = count_bits(oxygen_candidates.iter());
-        numbers = t.0;
         zeroes = t.1;
         ones = t.2;
 
@@ -64,12 +61,11 @@ fn part_1(input: &str) {
         i += 1;
     }
 
-    oxygen = i32::from_str_radix(oxygen_candidates.iter().next().unwrap(), 2).unwrap();
+    let oxygen = i32::from_str_radix(oxygen_candidates.iter().next().unwrap(), 2).unwrap();
 
     println!("Oxygen: {}", oxygen);
 
     let mut i = 0;
-    let mut co2 = 0;
 
     while co2_candidates.len() > 1 {
         let (_, zeroes, ones) = count_bits(co2_candidates.iter());
@@ -81,7 +77,7 @@ fn part_1(input: &str) {
         i += 1;
     }
 
-    co2 = i32::from_str_radix(co2_candidates.iter().next().unwrap(), 2).unwrap();
+    let co2 = i32::from_str_radix(co2_candidates.iter().next().unwrap(), 2).unwrap();
 
     println!("co2: {}", co2);
 
