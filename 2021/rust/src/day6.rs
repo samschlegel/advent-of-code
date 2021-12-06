@@ -17,6 +17,8 @@ impl Day6 {
         I: Iterator<Item = S>,
         S: AsRef<str>,
     {
+        self.lanternfish = [0; 9];
+
         _lines
             .next()
             .unwrap()
@@ -30,15 +32,9 @@ impl Day6 {
 
     pub fn step(&mut self) {
         let new_lanternfish = &mut [0; 9];
-        for i in 0..9 {
-            let count = self.lanternfish[i];
-            if i == 0 {
-                new_lanternfish[8] += count;
-                new_lanternfish[6] += count;
-            } else {
-                new_lanternfish[i - 1] += count;
-            }
-        }
+        new_lanternfish[0..8].copy_from_slice(&self.lanternfish[1..9]);
+        new_lanternfish[6] += self.lanternfish[0];
+        new_lanternfish[8] += self.lanternfish[0];
         self.lanternfish = *new_lanternfish;
     }
 }

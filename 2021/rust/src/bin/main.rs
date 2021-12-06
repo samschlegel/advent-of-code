@@ -17,7 +17,11 @@ fn main() -> io::Result<()> {
     let filepath = format!("inputs/day{}.txt", day_arg);
     let input = fs::read_to_string(filepath)?;
 
+    println!("Part 1:");
     day.part1(&mut input.lines())?;
+
+    println!("Part 2:");
+    day.part2(&mut input.lines())?;
 
     Ok(())
 }
