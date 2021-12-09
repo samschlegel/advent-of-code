@@ -6,6 +6,9 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 serde = "*"
+itertools = "*"
+maplit = "*"
+lazy_static = "*"
 
 [dev-dependencies]
 criterion = "0.3"
