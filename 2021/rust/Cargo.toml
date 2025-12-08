@@ -9,6 +9,8 @@ serde = "*"
 itertools = "*"
 maplit = "*"
 lazy_static = "*"
+ndarray = "*"
+petgraph = "*"
 
 [dev-dependencies]
 criterion = "0.3"

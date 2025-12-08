@@ -1,4 +1,5 @@
 {
     "nixEnvSelector.nixShellConfig": "${workspaceRoot}/shell.nix",
     "julia.executablePath": "/nix/store/60zsyf758xwx8jqpqsfl6nb9gzlb2xfp-julia-1.5.3/bin/julia",
+    "deno.enable": true,
 }
