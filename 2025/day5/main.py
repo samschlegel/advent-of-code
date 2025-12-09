@@ -33,6 +33,8 @@ def part1(filename):
                     fresh_ingredients.append(ingredient)
 
         print(f"Fresh ingredients: {len(fresh_ingredients)}")
+        possible_fresh = sum(map(lambda x: x[1] - x[0] + 1, merged_ranges))
+        print(f"Possible fresh: {possible_fresh}")
 
 
 def part2(filename):
