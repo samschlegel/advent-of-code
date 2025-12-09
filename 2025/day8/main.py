@@ -33,7 +33,7 @@ def connect(circuits: dict[int, set[int]], boxes: list[Box], a: Box, b: Box):
         del circuits[b_circuit]
 
 
-def get_closest_pairs_list(boxes) -> list[tuple[int, int, float]]:
+def get_closest_pairs_list(boxes) -> list[tuple[Box, Box, float]]:
     l = []
     for a_i in range(len(boxes)):
         for b_i in range(a_i + 1, len(boxes)):
@@ -55,7 +55,6 @@ def part1(filename, connections):
     for i in range(connections):
         a, b, _ = closest_pairs[i]
         connect(circuits, boxes, a, b)
-        print(f"[{i+1}/{connections}] Connected {a} and {b}")
 
     print(len(circuits))
     biggest_3 = sorted(len(c) for c in circuits.values())[-3:]
@@ -63,7 +62,18 @@ def part1(filename, connections):
 
 
 def part2(filename, connections):
-    pass
+    boxes = []
+    circuits = {}
+    with open(filename, "r") as f:
+        for i, line in enumerate(f):
+            boxes.append(Box(i, tuple(map(int, line.strip().split(",", 2))), i))
+            circuits[i] = {i}
+    closest_pairs = get_closest_pairs_list(boxes)
+    it = iter(closest_pairs)
+    while len(circuits) > 1:
+        a, b, _ = next(it)
+        connect(circuits, boxes, a, b)
+    print(a.pos[0] * b.pos[0])
 
 
 if __name__ == "__main__":
