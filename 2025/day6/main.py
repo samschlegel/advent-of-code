@@ -1,5 +1,6 @@
 import argparse
 from functools import reduce
+from socket import SocketType
 
 
 def part1(filename):
@@ -25,12 +26,44 @@ def part1(filename):
 
 
 def part2(filename):
-    pass
+    with open(filename) as f:
+        lines = f.readlines()
+
+    cols = max(len(line) for line in lines)
+    rows = len(lines)
+    numbers = []
+    solutions = []
+    for x in range(cols - 1, -1, -1):
+        num = 0
+        for y in range(rows):
+            try:
+                value = lines[y][x]
+            except IndexError:
+                value = " "
+            if value in (" ", "\n"):
+                continue
+            if value == "+":
+                numbers.append(num)
+                solutions.append(sum(numbers))
+                num = 0
+                numbers = []
+            elif value == "*":
+                numbers.append(num)
+                solutions.append(reduce(lambda a, b: a * b, numbers))
+                num = 0
+                numbers = []
+            else:
+                num = num * 10 + int(value)
+        if num != 0:
+            numbers.append(num)
+    print(sum(solutions))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Day 6")
-    parser.add_argument("filename", help="Input file")
+    parser.add_argument(
+        "filename", nargs="?", help="Input file", default="2025/day6/example_input.txt"
+    )
     args = parser.parse_args()
 
     part1(args.filename)
