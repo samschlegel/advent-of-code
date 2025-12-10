@@ -1,7 +1,11 @@
 import argparse
 from functools import reduce
 
-from PIL import Image, ImageDraw
+import matplotlib.pyplot as plt
+import numpy as np
+from skimage import io
+from skimage.color import rgb2gray
+from skimage.segmentation import flood
 
 OUTSIDE = (255, 255, 255)
 INSIDE = (0, 0, 0)
@@ -78,25 +82,39 @@ def part2(filename):
     def convert_point(xy):
         return x_map[xy[0]], y_map[xy[1]]
 
-    img = Image.new("RGB", res, color=INSIDE)
+    # Create image as numpy array (height, width, channels)
+    # Note: PIL uses (width, height) but numpy uses (height, width)
+    img = np.zeros((res[1], res[0], 3), dtype=np.uint8)
+    img[:, :] = INSIDE
+
     n_corners = len(corners)
     for i in range(n_corners):
         # Draw red corner
         a = convert_point(corners[i])
-        img.putpixel(a, CORNER)
+        # Note: numpy indexing is [row, col] = [y, x]
+        img[a[1], a[0]] = CORNER
         # Connect with line
         b = convert_point(corners[(i + 1) % n_corners])
         for x in line(a, b):
-            img.putpixel(x, EDGE)
+            img[x[1], x[0]] = EDGE
 
     # Because of how we convert points, 0,0 will always be outside, so start a floodfill from there
-    ImageDraw.floodfill(img, (0, 0), OUTSIDE)
+    # flood only supports grayscale, so first convert our image to that
+    grayscale_img = rgb2gray(img)
+    mask = flood(grayscale_img, (0, 0), connectivity=1)
+    img[mask] = OUTSIDE
 
-    def check_line(a, b):
-        for x in line(a, b, include_ends=True):
-            if img.getpixel(x) == OUTSIDE:
-                return False
-        return True
+    def check_line_np(a, b):
+        if a[0] == b[0]:
+            min_y = min(a[1], b[1])
+            max_y = max(a[1], b[1]) + 1
+            return not np.any(mask[min_y:max_y, a[0]])
+        elif a[1] == b[1]:
+            min_x = min(a[0], b[0])
+            max_x = max(a[0], b[0]) + 1
+            return not np.any(mask[a[1], min_x:max_x])
+        else:
+            raise ValueError("Line is not horizontal or vertical")
 
     # build all the potential rects first and sort by size since checking the lines is costly
     potential_rects = []
@@ -112,10 +130,10 @@ def part2(filename):
         b = (a[0], c[1])
         d = (c[0], a[1])
         if (
-            not check_line(a, b)
-            or not check_line(b, c)
-            or not check_line(c, d)
-            or not check_line(d, a)
+            not check_line_np(a, b)
+            or not check_line_np(b, c)
+            or not check_line_np(c, d)
+            or not check_line_np(d, a)
         ):
             continue
         max_area = actual_area
@@ -123,7 +141,10 @@ def part2(filename):
         # iterate over the lines ab, bc, cd, and da, asserting that all their pixels are non-black
     print(f"Max area: {max_area}")
 
-    img.show()
+    # Display the image using matplotlib
+    # plt.imshow(img)
+    # plt.axis("off")
+    # plt.show()
 
 
 if __name__ == "__main__":
