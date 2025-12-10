@@ -31,7 +31,7 @@ class Machine:
         Since XOR is idempotent (x ^ x = 0), we only care about odd/even presses.
         So we use boolean variables: True = press odd times, False = press even times.
         """
-        s = z3.Solver()
+        o = z3.Optimize()
 
         # Create boolean variable for each button (True = press it, False = don't)
         button_vars = [z3.Bool(f"button_{i}") for i in range(len(self.buttons))]
@@ -56,27 +56,21 @@ class Machine:
                 xor_result = button_bits[0]
                 for b in button_bits[1:]:
                     xor_result = z3.Xor(xor_result, b)
-                s.add(xor_result == (target_bit == 1))
+                o.add(xor_result == (target_bit == 1))
             else:
                 # No buttons affect this bit, so it must be 0 in target
-                s.add(target_bit == 0)
+                o.add(target_bit == 0)
 
         # Minimize the number of button presses
         # We'll search for solutions with increasing number of presses
-        for max_presses in range(len(self.buttons) + 1):
-            s.push()
-            # Add constraint on total number of presses
-            # s.add(z3.Sum([z3.If(bv, 1, 0) for bv in button_vars]) <= max_presses)
-
-            if s.check() == z3.sat:
-                m = s.model()
-                result = []
-                for i, bv in enumerate(button_vars):
-                    if m.evaluate(bv):
-                        result.append(self.buttons[i])
-                s.pop()
-                return tuple(result)
-            s.pop()
+        o.minimize(z3.Sum([z3.If(bv, 1, 0) for bv in button_vars]))
+        if o.check() == z3.sat:
+            m = o.model()
+            result = []
+            for i, bv in enumerate(button_vars):
+                if m.evaluate(bv):
+                    result.append(self.buttons[i])
+            return tuple(result)
 
         raise ValueError("No solution found")
 
