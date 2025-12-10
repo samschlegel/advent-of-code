@@ -12,7 +12,7 @@ import z3
 class Machine:
     diagram: int
     buttons: list[int]
-    cost: None
+    joltage: list[int]
 
     def solve_bruteforce(self):
         for depth in range(0, 10):
@@ -88,8 +88,10 @@ class Machine:
 
         # Create integer variable for each button, where the value is the number of presses
         button_vars = z3.IntVector("button", len(self.buttons))
+        # Ensure they're only positive
         for x in button_vars:
             o.add(x >= 0)
+        # Minimize the number of button presses
         h = o.minimize(z3.Sum(button_vars))
 
         # Find the number of bits we need to consider
@@ -99,36 +101,28 @@ class Machine:
         # For each bit position, constrain that the XOR equals the target
         for bit_pos in range(num_bits):
             target_bit = (self.diagram >> bit_pos) & 1
+            target_joltage = self.joltage[bit_pos]
 
             # Collect which buttons affect this bit
             button_bits: list[z3.ArithRef] = []
             for i, button_val in enumerate(self.buttons):
                 button_bit = (button_val >> bit_pos) & 1
                 if button_bit == 1:
-                    b = button_vars[i] % 2 == 1
-                    button_bits.append(b)
+                    button_bits.append(button_vars[i])
 
-            # XOR of booleans: odd number of True values = True, even = False
             if button_bits:
-                xor_result = button_bits[0]
+                joltage_result = button_bits[0]
                 for b in button_bits[1:]:
-                    xor_result = z3.Xor(xor_result, b)
-                o.add(xor_result == (target_bit == 1))
+                    joltage_result += b
+                o.add(joltage_result == target_joltage)
             else:
                 # No buttons affect this bit, so it must be 0 in target
                 o.add(target_bit == 0)
 
-        # Minimize the number of button presses
-        # We'll search for solutions with increasing number of presses
-        # o.add(button_vars[0] == 0)
         while o.check() == z3.sat:
             m = o.model()
             result = []
-            for i, bv in enumerate(button_vars):
-                r = m[bv].as_long()
-                if r > 0:
-                    result.append(self.buttons[i])
-            return tuple(result)
+            return m.eval(z3.Sum(button_vars)).as_long()
 
         raise ValueError("No solution found")
 
@@ -140,7 +134,8 @@ def parse(filename):
             parts = line.split()
             diagram = parse_diagram(parts[0])
             buttons = parse_buttons(parts[1:-1])
-            machine = Machine(diagram, buttons, None)
+            joltage = parse_joltage(parts[-1])
+            machine = Machine(diagram, buttons, joltage)
             machines.append(machine)
     return machines
 
@@ -163,44 +158,37 @@ def parse_buttons(s):
     return bs
 
 
+def parse_joltage(s):
+    return list(map(int, s[1:-1].split(",")))
+
+
 def part1(filename):
     machines = parse(filename)
     total_presses = 0
-    total_z3_time = 0
-    total_bf_time = 0
-    z3_won = 0
-    bf_won = 0
     for i, machine in enumerate(machines):
-        # print(machine)
-        t_z3 = timeit.timeit(lambda: machine.solve_z3(), number=10)
-        total_z3_time += t_z3
-        t_bf = timeit.timeit(lambda: machine.solve_bruteforce(), number=10)
-        total_bf_time += t_bf
-        solution_z3 = machine.solve_z3_p2()
+        print(machine)
+        solution_z3 = machine.solve_z3()
         solution_bf = machine.solve_bruteforce()
         if len(solution_z3) != len(solution_bf):
             print(
                 f"{i+1} Z3 and BF disagree on {machine}: Z3={solution_z3}, BF={solution_bf}"
             )
             return
-        elif t_z3 < t_bf:
-            z3_won += 1
-            print(f"Z3 won: {len(solution_z3)} presses")
-        else:
-            bf_won += 1
-            print(f"BF won: {len(solution_bf)} presses")
 
         # print(solution)
         total_presses += len(solution_bf)
     print(f"Total presses: {total_presses}")
-    print(f"Total Z3 time: {total_z3_time:.6f} seconds")
-    print(f"Total BF time: {total_bf_time:.6f} seconds")
-    print(f"Z3 won: {z3_won}")
-    print(f"BF won: {bf_won}")
 
 
 def part2(filename):
-    pass
+    machines = parse(filename)
+    total_presses = 0
+    for i, machine in enumerate(machines):
+        print(machine)
+        solution = machine.solve_z3_p2()
+
+        total_presses += solution
+    print(f"Total presses: {total_presses}")
 
 
 if __name__ == "__main__":
