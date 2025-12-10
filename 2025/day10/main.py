@@ -34,7 +34,7 @@ class Machine:
         o = z3.Optimize()
 
         # Create boolean variable for each button (True = press it, False = don't)
-        button_vars = [z3.Bool(f"button_{i}") for i in range(len(self.buttons))]
+        button_vars = z3.BoolVector("button", len(self.buttons))
 
         # Find the number of bits we need to consider
         max_val = max(self.diagram, max(self.buttons) if self.buttons else 0)
@@ -77,6 +77,61 @@ class Machine:
     def solve(self):
         return self.solve_z3()
 
+    def solve_z3_p2(self):
+        """Solve using Z3 SMT solver.
+
+        We model this as: for each button, how many times do we press it?
+        Since XOR is idempotent (x ^ x = 0), we only care about odd/even presses.
+        So we use boolean variables: True = press odd times, False = press even times.
+        """
+        o = z3.Optimize()
+
+        # Create integer variable for each button, where the value is the number of presses
+        button_vars = z3.IntVector("button", len(self.buttons))
+        for x in button_vars:
+            o.add(x >= 0)
+        h = o.minimize(z3.Sum(button_vars))
+
+        # Find the number of bits we need to consider
+        max_val = max(self.diagram, max(self.buttons) if self.buttons else 0)
+        num_bits = max_val.bit_length() if max_val > 0 else 1
+
+        # For each bit position, constrain that the XOR equals the target
+        for bit_pos in range(num_bits):
+            target_bit = (self.diagram >> bit_pos) & 1
+
+            # Collect which buttons affect this bit
+            button_bits: list[z3.ArithRef] = []
+            for i, button_val in enumerate(self.buttons):
+                button_bit = (button_val >> bit_pos) & 1
+                if button_bit == 1:
+                    b = button_vars[i] % 2 == 1
+                    button_bits.append(b)
+
+            # XOR of booleans: odd number of True values = True, even = False
+            if button_bits:
+                xor_result = button_bits[0]
+                for b in button_bits[1:]:
+                    xor_result = z3.Xor(xor_result, b)
+                o.add(xor_result == (target_bit == 1))
+            else:
+                # No buttons affect this bit, so it must be 0 in target
+                o.add(target_bit == 0)
+
+        # Minimize the number of button presses
+        # We'll search for solutions with increasing number of presses
+        # o.add(button_vars[0] == 0)
+        while o.check() == z3.sat:
+            m = o.model()
+            result = []
+            for i, bv in enumerate(button_vars):
+                r = m[bv].as_long()
+                if r > 0:
+                    result.append(self.buttons[i])
+            return tuple(result)
+
+        raise ValueError("No solution found")
+
 
 def parse(filename):
     machines = []
@@ -115,18 +170,19 @@ def part1(filename):
     total_bf_time = 0
     z3_won = 0
     bf_won = 0
-    for machine in machines:
+    for i, machine in enumerate(machines):
         # print(machine)
         t_z3 = timeit.timeit(lambda: machine.solve_z3(), number=10)
         total_z3_time += t_z3
         t_bf = timeit.timeit(lambda: machine.solve_bruteforce(), number=10)
         total_bf_time += t_bf
-        solution_z3 = machine.solve_z3()
+        solution_z3 = machine.solve_z3_p2()
         solution_bf = machine.solve_bruteforce()
-        if solution_z3 != solution_bf:
+        if len(solution_z3) != len(solution_bf):
             print(
-                f"Z3 and BF disagree on {machine}: Z3={solution_z3}, BF={solution_bf}"
+                f"{i+1} Z3 and BF disagree on {machine}: Z3={solution_z3}, BF={solution_bf}"
             )
+            return
         elif t_z3 < t_bf:
             z3_won += 1
             print(f"Z3 won: {len(solution_z3)} presses")
