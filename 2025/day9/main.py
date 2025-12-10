@@ -1,7 +1,5 @@
 import argparse
 from functools import reduce
-import math
-from pprint import pprint
 
 from PIL import Image, ImageDraw
 
@@ -76,7 +74,6 @@ def part2(filename):
     for i in range(len(ys)):
         y_map[ys[i]] = 2 * i + 1
     res = (len(xs) * 2 + 1, len(ys) * 2 + 1)
-    print(f"res: {res}")
 
     def convert_point(xy):
         return x_map[xy[0]], y_map[xy[1]]
@@ -101,28 +98,29 @@ def part2(filename):
                 return False
         return True
 
-    max_area = 0
-    total_rects = n_corners * (n_corners - 1) // 2
-    valid_rects = 0
+    # build all the potential rects first and sort by size since checking the lines is costly
+    potential_rects = []
     for i in range(n_corners):
         for j in range(i + 1, n_corners):
             a = convert_point(corners[i])
-            c = convert_point(corners[j])
-            b = (a[0], c[1])
-            d = (c[0], a[1])
-            if (
-                not check_line(a, b)
-                or not check_line(b, c)
-                or not check_line(c, d)
-                or not check_line(d, a)
-            ):
-                continue
-            valid_rects += 1
+            b = convert_point(corners[j])
             actual_area = area(corners[i], corners[j])
-            max_area = max(max_area, actual_area)
-            # iterate over the lines ab, bc, cd, and da, asserting that all their pixels are non-black
-    print(f"Total rectangles: {total_rects}")
-    print(f"Valid rectangles: {valid_rects}")
+            potential_rects.append((actual_area, a, b))
+    potential_rects.sort(key=lambda x: -x[0])
+
+    for actual_area, a, c in potential_rects:
+        b = (a[0], c[1])
+        d = (c[0], a[1])
+        if (
+            not check_line(a, b)
+            or not check_line(b, c)
+            or not check_line(c, d)
+            or not check_line(d, a)
+        ):
+            continue
+        max_area = actual_area
+        break
+        # iterate over the lines ab, bc, cd, and da, asserting that all their pixels are non-black
     print(f"Max area: {max_area}")
 
     img.show()
