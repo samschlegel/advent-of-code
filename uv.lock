@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.14"
 
 [[package]]
@@ -11,6 +11,7 @@ dependencies = [
     { name = "matplotlib" },
     { name = "pillow" },
     { name = "scikit-image" },
+    { name = "scipy" },
     { name = "z3-solver" },
 ]
 
@@ -20,6 +21,7 @@ requires-dist = [
     { name = "matplotlib", specifier = ">=3.10.7" },
     { name = "pillow", specifier = ">=12.0.0" },
     { name = "scikit-image", specifier = ">=0.25.2" },
+    { name = "scipy", specifier = ">=1.16.3" },
     { name = "z3-solver", specifier = ">=4.15.4.0" },
 ]
 

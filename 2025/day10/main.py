@@ -4,6 +4,8 @@ import itertools
 from dataclasses import dataclass
 import operator
 import timeit
+import numpy as np
+from scipy.optimize import LinearConstraint, milp
 
 import z3
 
@@ -126,6 +128,22 @@ class Machine:
 
         raise ValueError("No solution found")
 
+    def solve_p2_np(self):
+        max_val = max(self.diagram, max(self.buttons) if self.buttons else 0)
+        num_bits = max_val.bit_length() if max_val > 0 else 1
+        a = np.zeros((num_bits, len(self.buttons)), dtype=int)
+        for i, button in enumerate(self.buttons):
+            for bit_pos in range(num_bits):
+                button_bit = (button >> bit_pos) & 1
+                a[bit_pos, i] = button_bit
+        c = np.ones(len(self.buttons), dtype=int)
+        b_u = np.array(self.joltage, dtype=int)
+        b_l = np.array(self.joltage, dtype=int)
+        constraints = LinearConstraint(a, b_l, b_u)
+        integrality = np.ones_like(c)
+        res = milp(c=c, constraints=constraints, integrality=integrality)
+        return sum(int(x) for x in res.x)
+
 
 def parse(filename):
     machines = []
@@ -166,16 +184,7 @@ def part1(filename):
     machines = parse(filename)
     total_presses = 0
     for i, machine in enumerate(machines):
-        print(machine)
-        solution_z3 = machine.solve_z3()
         solution_bf = machine.solve_bruteforce()
-        if len(solution_z3) != len(solution_bf):
-            print(
-                f"{i+1} Z3 and BF disagree on {machine}: Z3={solution_z3}, BF={solution_bf}"
-            )
-            return
-
-        # print(solution)
         total_presses += len(solution_bf)
     print(f"Total presses: {total_presses}")
 
@@ -184,8 +193,7 @@ def part2(filename):
     machines = parse(filename)
     total_presses = 0
     for i, machine in enumerate(machines):
-        print(machine)
-        solution = machine.solve_z3_p2()
+        solution = machine.solve_p2_np()
 
         total_presses += solution
     print(f"Total presses: {total_presses}")
