@@ -9,3 +9,5 @@ members = ["target/aoc/aoc-autobuild"]
 [dependencies]
 aoc-runner = "*"
 aoc-runner-derive = "*"
+fixedbitset = "0.5.7"
+petgraph = "0.8.3"
