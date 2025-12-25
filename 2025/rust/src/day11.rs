@@ -1,20 +1,22 @@
 use std::{
     collections::{HashMap, HashSet},
     convert::identity,
+    fs::File,
     hash::{DefaultHasher, RandomState},
+    io::Write,
 };
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use fixedbitset::FixedBitSet;
 use petgraph::{
-    algo::{all_simple_paths, is_cyclic_directed},
+    algo::{all_simple_paths, toposort},
+    dot::{Config, Dot},
     prelude::*,
-    visit::{VisitMap, Visitable, Walker},
 };
 
 #[aoc_generator(day11)]
-pub fn input_generator(input: &str) -> (DiGraph<String, ()>, HashMap<String, NodeIndex>) {
-    let mut graph = DiGraph::new();
+pub fn input_generator(input: &str) -> (StableDiGraph<String, ()>, HashMap<String, NodeIndex>) {
+    let mut graph = StableDiGraph::new();
     let mut node_map = HashMap::new();
 
     for line in input.lines() {
@@ -37,7 +39,7 @@ pub fn input_generator(input: &str) -> (DiGraph<String, ()>, HashMap<String, Nod
     (graph, node_map)
 }
 
-fn reachable_nodes(graph: &DiGraph<String, ()>, from: &[NodeIndex]) -> FixedBitSet {
+fn reachable_nodes(graph: &StableDiGraph<String, ()>, from: &[NodeIndex]) -> FixedBitSet {
     let mut dfs = Dfs::empty(&graph);
     for &node in from {
         dfs.move_to(node);
@@ -48,8 +50,34 @@ fn reachable_nodes(graph: &DiGraph<String, ()>, from: &[NodeIndex]) -> FixedBitS
     dfs.discovered
 }
 
+fn count_paths<N, E>(graph: &StableDiGraph<N, E>, start: NodeIndex, end: NodeIndex) -> usize {
+    let mut paths = HashMap::new();
+    paths.insert(start, 1);
+
+    for node in toposort(graph, None).unwrap() {
+        if node == end {
+            return paths[&end];
+        }
+        let current = *paths.get(&node).unwrap_or(&0);
+        for neighbor in graph.neighbors(node) {
+            paths
+                .entry(neighbor)
+                .and_modify(|e| *e += current)
+                .or_insert(current);
+        }
+    }
+    0
+}
+
+#[aoc(day11, part1)]
+pub fn solve_part1(input: &(StableDiGraph<String, ()>, HashMap<String, NodeIndex>)) -> usize {
+    let (graph, node_map) = input;
+    println!("Graph has {} nodes", graph.node_count());
+    count_paths(graph, node_map["you"], node_map["out"])
+}
+
 #[aoc(day11, part2)]
-pub fn solve_part2(input: &(DiGraph<String, ()>, HashMap<String, NodeIndex>)) -> usize {
+pub fn solve_part2(input: &(StableDiGraph<String, ()>, HashMap<String, NodeIndex>)) -> usize {
     let (graph, node_map) = input;
     println!("Graph has {} nodes", graph.node_count());
     let mut revgraph = graph.clone();
@@ -61,7 +89,9 @@ pub fn solve_part2(input: &(DiGraph<String, ()>, HashMap<String, NodeIndex>)) ->
         .flat_map(|&s| node_map.get(s).cloned())
         .collect::<Vec<_>>();
     for &node in from.iter() {
-        reachable.intersect_with(&reachable_nodes(&revgraph, &[node]));
+        let mut sub_reach = reachable_nodes(&graph, &[node]);
+        sub_reach.union_with(&reachable_nodes(&revgraph, &[node]));
+        reachable.intersect_with(&sub_reach);
     }
     println!(
         "Accessible nodes from '{:?}': {:?}",
@@ -78,25 +108,11 @@ pub fn solve_part2(input: &(DiGraph<String, ()>, HashMap<String, NodeIndex>)) ->
         },
         |_, w| Some(w),
     );
-    let min_intermediate_nodes = 0;
-    let max_intermediate_nodes = None;
-
-    let mut total_length = 0;
-    let mut count = 0;
-
-    for path in all_simple_paths::<Vec<_>, _, RandomState>(
+    println!("Graph size after reduction: {}", graph.node_count());
+    // Sanity check that the graph contains svr and out
+    count_paths(
         &graph,
         *node_map.get("svr").unwrap(),
         *node_map.get("out").unwrap(),
-        min_intermediate_nodes,
-        max_intermediate_nodes,
-    ) {
-        total_length += path.len();
-        count += 1;
-        if count % 1000 == 0 {
-            println!("Processed {} paths", count);
-            println!("Average path length: {}", total_length / count);
-        }
-    }
-    count
+    )
 }
