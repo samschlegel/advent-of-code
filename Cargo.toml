@@ -3,3 +3,6 @@ resolver = "3"
 members = [
   "2021/rust"
 ]
+exclude = [
+  "2025",
+]

@@ -1,18 +1,8 @@
-use std::{
-    collections::{HashMap, HashSet},
-    convert::identity,
-    fs::File,
-    hash::{DefaultHasher, RandomState},
-    io::Write,
-};
+use std::collections::HashMap;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use fixedbitset::FixedBitSet;
-use petgraph::{
-    algo::{all_simple_paths, toposort},
-    dot::{Config, Dot},
-    prelude::*,
-};
+use petgraph::{algo::toposort, prelude::*};
 
 #[aoc_generator(day11)]
 pub fn input_generator(input: &str) -> (StableDiGraph<String, ()>, HashMap<String, NodeIndex>) {
@@ -54,7 +44,19 @@ fn count_paths<N, E>(graph: &StableDiGraph<N, E>, start: NodeIndex, end: NodeInd
     let mut paths = HashMap::new();
     paths.insert(start, 1);
 
-    for node in toposort(graph, None).unwrap() {
+    count_paths_using_toposort(graph, &toposort(graph, None).unwrap(), start, end)
+}
+
+fn count_paths_using_toposort<N, E>(
+    graph: &StableDiGraph<N, E>,
+    toposort: &Vec<NodeIndex>,
+    start: NodeIndex,
+    end: NodeIndex,
+) -> usize {
+    let mut paths = HashMap::new();
+    paths.insert(start, 1);
+
+    for &node in toposort {
         if node == end {
             return paths[&end];
         }
@@ -72,14 +74,12 @@ fn count_paths<N, E>(graph: &StableDiGraph<N, E>, start: NodeIndex, end: NodeInd
 #[aoc(day11, part1)]
 pub fn solve_part1(input: &(StableDiGraph<String, ()>, HashMap<String, NodeIndex>)) -> usize {
     let (graph, node_map) = input;
-    println!("Graph has {} nodes", graph.node_count());
     count_paths(graph, node_map["you"], node_map["out"])
 }
 
-#[aoc(day11, part2)]
+#[aoc(day11, part2, reduction)]
 pub fn solve_part2(input: &(StableDiGraph<String, ()>, HashMap<String, NodeIndex>)) -> usize {
     let (graph, node_map) = input;
-    println!("Graph has {} nodes", graph.node_count());
     let mut revgraph = graph.clone();
     revgraph.reverse();
     let mut reachable = FixedBitSet::with_capacity(graph.node_count());
@@ -93,11 +93,6 @@ pub fn solve_part2(input: &(StableDiGraph<String, ()>, HashMap<String, NodeIndex
         sub_reach.union_with(&reachable_nodes(&revgraph, &[node]));
         reachable.intersect_with(&sub_reach);
     }
-    println!(
-        "Accessible nodes from '{:?}': {:?}",
-        from,
-        reachable.count_ones(..)
-    );
     let graph = graph.filter_map(
         |v, w| {
             if reachable.contains(v.index()) {
@@ -108,11 +103,33 @@ pub fn solve_part2(input: &(StableDiGraph<String, ()>, HashMap<String, NodeIndex
         },
         |_, w| Some(w),
     );
-    println!("Graph size after reduction: {}", graph.node_count());
     // Sanity check that the graph contains svr and out
     count_paths(
         &graph,
         *node_map.get("svr").unwrap(),
         *node_map.get("out").unwrap(),
     )
+}
+
+#[aoc(day11, part2, mult)]
+pub fn solve_part2_mult(input: &(StableDiGraph<String, ()>, HashMap<String, NodeIndex>)) -> usize {
+    let (graph, node_map) = input;
+    let svr_fft = count_paths(&graph, node_map["svr"], node_map["fft"]);
+    let fft_dac = count_paths(&graph, node_map["fft"], node_map["dac"]);
+    let dac_out = count_paths(&graph, node_map["dac"], node_map["out"]);
+
+    svr_fft * fft_dac * dac_out
+}
+
+#[aoc(day11, part2, mult_shared_topo)]
+pub fn solve_part2_mult_shared_topo(
+    input: &(StableDiGraph<String, ()>, HashMap<String, NodeIndex>),
+) -> usize {
+    let (graph, node_map) = input;
+    let topo = toposort(graph, None).unwrap();
+    let svr_fft = count_paths_using_toposort(&graph, &topo, node_map["svr"], node_map["fft"]);
+    let fft_dac = count_paths_using_toposort(&graph, &topo, node_map["fft"], node_map["dac"]);
+    let dac_out = count_paths_using_toposort(&graph, &topo, node_map["dac"], node_map["out"]);
+
+    svr_fft * fft_dac * dac_out
 }
