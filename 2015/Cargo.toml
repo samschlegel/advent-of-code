@@ -1,0 +1,11 @@
+[package]
+name = "aoc-2015"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+aoc-runner = "*"
+aoc-runner-derive = "*"
+fixedbitset = "0.5.7"
+nom = "8.0.0"
+petgraph = "0.8.3"

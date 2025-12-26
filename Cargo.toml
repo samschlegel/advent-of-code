@@ -4,5 +4,6 @@ members = [
   "2021/rust"
 ]
 exclude = [
-  "2025",
+  "2015",
+  "2025/rust",
 ]
