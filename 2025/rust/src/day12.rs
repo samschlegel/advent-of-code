@@ -10,6 +10,7 @@ pub struct Shape {
     pub width: usize,
     pub height: usize,
     pub cells: Vec<bool>,
+    pub count: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -32,10 +33,11 @@ pub fn parse_shape(input: &str) -> IResult<&str, Shape> {
 
     let height = rows.len();
     let width = rows.first().map_or(0, |r| r.len());
-    let cells = rows
+    let cells: Vec<bool> = rows
         .iter()
         .flat_map(|row| row.chars().map(|c| c == '#'))
         .collect();
+    let count = cells.iter().filter(|&&cell| cell).count();
 
     Ok((
         input,
@@ -43,6 +45,7 @@ pub fn parse_shape(input: &str) -> IResult<&str, Shape> {
             width,
             height,
             cells,
+            count,
         },
     ))
 }
@@ -85,7 +88,23 @@ pub fn input_generator(input: &str) -> Input {
 #[aoc(day12, part1)]
 pub fn solve_part1(input: &Input) -> usize {
     println!("{:?}", input);
-    0
+    // Do a basic check if there are enough spaces in the region to fit the shapes if we could just split them all up
+
+    let mut valid = 0;
+    for region in &input.regions {
+        let total_required = region
+            .quantities
+            .iter()
+            .zip(input.shapes.iter())
+            .map(|(quantity, shape)| quantity * shape.count)
+            .sum::<usize>();
+        if total_required <= region.width * region.height {
+            valid += 1;
+        }
+    }
+    println!("Total regions: {}", input.regions.len());
+    println!("Valid regions: {}", valid);
+    valid
 }
 
 #[cfg(test)]
