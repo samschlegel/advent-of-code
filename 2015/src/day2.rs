@@ -23,11 +23,22 @@ impl Gift {
         2 * (lw + wh + hl)
     }
 
-    pub fn slack_area(&self) -> usize {
+    pub fn min_area(&self) -> usize {
         let lw = self.length * self.width;
         let wh = self.width * self.height;
         let hl = self.height * self.length;
         *[lw, wh, hl].iter().min().unwrap()
+    }
+
+    pub fn min_perimeter(&self) -> usize {
+        let lw = self.length + self.width;
+        let wh = self.width + self.height;
+        let hl = self.height + self.length;
+        2 * *[lw, wh, hl].iter().min().unwrap()
+    }
+
+    pub fn volume(&self) -> usize {
+        self.length * self.width * self.height
     }
 }
 
@@ -62,8 +73,10 @@ fn input_generator(input: &str) -> Vec<Gift> {
 
 #[aoc(day2, part1)]
 fn part1(input: &Vec<Gift>) -> usize {
-    input
-        .iter()
-        .map(|g| g.surface_area() + g.slack_area())
-        .sum()
+    input.iter().map(|g| g.surface_area() + g.min_area()).sum()
+}
+
+#[aoc(day2, part2)]
+fn part2(input: &Vec<Gift>) -> usize {
+    input.iter().map(|g| g.min_perimeter() + g.volume()).sum()
 }
